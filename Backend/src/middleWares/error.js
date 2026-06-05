@@ -14,7 +14,7 @@ export const errorMiddleware = (err, req, res, next) => {
         err = new ErrorHandler(err.message, 400);
     }
 
-    if(err.name === "jsonwebTokenError"){
+    if(err.name === "JsonWebTokenError"){
         err.message = "Json Web Token is invalid, try again";
         err = new ErrorHandler(err.message, 400);
     }

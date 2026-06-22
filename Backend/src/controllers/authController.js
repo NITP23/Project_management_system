@@ -2,7 +2,6 @@ import { asyncHandler } from "../middleWares/asyncHandler.js";
 import ErrorHandler from "../middleWares/error.js";
 import {User} from "../Models/user.js";
 import { generateToken } from "../utils/generateToken.js";
-
 import {generateForgetPasswordEmailTemplate} from "../utils/emailTemplates.js";
 import {sendEmail} from "../services/emailService.js";
 import crypto from "crypto";

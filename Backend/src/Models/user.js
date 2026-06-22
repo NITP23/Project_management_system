@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["Student","Professor", "Admin",],
+    enum: ["Student","Teacher", "Admin",],
   },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
@@ -61,9 +61,7 @@ const userSchema = new mongoose.Schema({
         default : null,
     },
     },
-    {
-        timestamps: true,
-    }
+    {timestamps : true,}
 );
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;

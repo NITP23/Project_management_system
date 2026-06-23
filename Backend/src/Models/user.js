@@ -4,64 +4,64 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Name is required"],
-    trim : true,
-    maxLength : [50, "Name cannot exceed 50 characters"]
-  },
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    unique: true,
-    lowercase: true,
-    match: [/\S+@\S+\.\S+/, "Please use a valid email address"]
-  },
-  password: {
-    type: String,
-    required: [true, "Password is required"],
-    select: false,
-    minLength: [8, "Password must be at least 8 characters long"]
-  },
-  role: {
-    type: String,
-    enum: ["Student","Teacher", "Admin",],
-  },
+    name: {
+        type: String,
+        required: [true, "Name is required"],
+        trim: true,
+        maxLength: [50, "Name cannot exceed 50 characters"]
+    },
+    email: {
+        type: String,
+        required: [true, "Email is required"],
+        unique: true,
+        lowercase: true,
+        match: [/\S+@\S+\.\S+/, "Please use a valid email address"]
+    },
+    password: {
+        type: String,
+        required: [true, "Password is required"],
+        select: false,
+        minLength: [8, "Password must be at least 8 characters long"]
+    },
+    role: {
+        type: String,
+        enum: ["Student", "Teacher", "Admin",],
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     department: {
-        type: String,                                           
-        trim : true,
-        default : null
+        type: String,
+        trim: true,
+        default: null
     },
-    experties :{
-        type : [String],
-        trim : true,    
-        default : [],
+    experties: {
+        type: [String],
+        trim: true,
+        default: [],
     },
-    maxStudents : { 
-        type : Number,
-        default : 10,
-        min : [1, "min students must be at least 1"],
+    maxStudents: {
+        type: Number,
+        default: 10,
+        min: [1, "min students must be at least 1"],
     },
-    assignedStudents : [
+    assignedStudents: [
         {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : "User",
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
         },
     ],
-    supervisor : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "User",
-        default : null,
+    supervisor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
     },
-    projects : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "Project",
-        default : null,
+    projects: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Project",
+        default: null,
     },
-    },
-    {timestamps : true,}
+},
+    { timestamps: true, }
 );
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
@@ -73,6 +73,13 @@ userSchema.methods.generateToken = function () {
         expiresIn: process.env.JWT_EXPIRE,
     });
 };
+
+userSchema.methods.hasCapacity = async function () {
+    if (this.role !== "Teacher") {
+        return false;
+    }
+    return this.assignedStudents.length < this.maxStudents;
+}
 
 
 userSchema.methods.comparePassword = async function (enteredPassword) {

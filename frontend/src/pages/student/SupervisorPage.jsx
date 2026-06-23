@@ -46,12 +46,18 @@ const SupervisorPage = () => {
     setShowRequestModal(true);
   }
 
-  const submitRequest = () => {
-    // console.log
+  const submitRequest = async () => {
+    console.log(selectedSupervisor)
     if (!selectedSupervisor) return;
     const message = requestMessage?.trim() || `${authUser.name || "Student"} has requested ${selectedSupervisor.name} to be their supervisor.`;
 
-    dispatch(requestSupervisor({ teacherId: selectedSupervisor._id, message }));
+    dispatch(requestSupervisor({ teacherId: selectedSupervisor._id, message })).then(res => {
+      if (res.type === "student/requestSupervisor/fulfilled") {
+        setShowRequestModal(false);
+
+      }
+    });
+
 
   }
 
@@ -253,8 +259,8 @@ const SupervisorPage = () => {
       {
         showRequestModal && selectedSupervisor && (
           <div className="modal-overlay">
-            <div className="modal-overlay">
-              <div className="p-6 ">
+            <div className="modal-overlay ">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-800">Request Supervision</h3>
                   <button className="text-slate-400 hover:text-slate-600" onClick={() => { setShowRequestModal(false); setSelectedSupervisor(null); setRequestMessage("") }} >

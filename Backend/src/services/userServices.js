@@ -1,4 +1,4 @@
-import {User} from "../Models/user.js";
+import { User } from "../Models/user.js";
 
 
 export const createUser = async (userData) => {
@@ -27,9 +27,9 @@ export const getUserById = async (id) => {
 };
 
 export const getAllUsers = async () => {
-    const query = {role: {$ne: "Admin"}}
-    const users = await User.find(query).select("-password -resetPasswordToken -confirmPasswordExpire").sort({createdAt: -1});
-    
+    const query = { role: { $ne: "Admin" } }
+    const users = await User.find(query).select("-password -resetPasswordToken -confirmPasswordExpire").sort({ createdAt: -1 });
+
     return users
 }
 
@@ -40,3 +40,24 @@ export const deleteUser = async (id) => {
     }
     return await user.deleteOne();
 };
+
+export const assignSupervisorDirectly = async (studentId, supervisorId) => {
+
+    const student = await User.findOne({ _id: studentId, role: "Student" });
+
+    const supervisor = await User.findOne({ _id: supervisorId, role: "Teacher" });
+
+    if (!student || !supervisor) {
+        throw new Error("Student or Supervisor not found");
+    }
+    if (!supervisor.hasCapacity()) {
+        throw new Error("Supervisor has reached max capacity");
+    }
+
+    student.supervisor = supervisorId;
+    supervisor.assignedStudents.push(studentId);
+    await Promise.all([student.save(), supervisor.save()])
+
+    return { student, supervisor }
+
+}

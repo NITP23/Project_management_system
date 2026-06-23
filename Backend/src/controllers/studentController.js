@@ -54,7 +54,7 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
 
     res.status(201).json({
         success: true,
-        date: { project },
+        data: { project },
         message: "Project proposal submitted successfully",
     })
 })
@@ -64,26 +64,18 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
     const studentId = req.user._id;
     const project = await projectService.getProjectById(projectId);
 
-    // console.log(project);
-    // console.log(studentId);
-
-
     if (!project || project.student._id.toString() !== studentId.toString()) {
         return next(new ErrorHandler("Not authorized to upload files to this project", 403))
     }
     if (!req.files || req.files.length === 0) {
         return next(new ErrorHandler("No files Uploaded", 400))
     }
-
-    // console.log("line 82");
-    // console.log(req.files)
-
     const updatedProject = await projectService.addFilesToProject(projectId, req.files);
 
     res.status(200).json({
         success: true,
         message: "file uploaded successfully",
-        date: { project: updatedProject },
+        data: { project: updatedProject },
     })
 })
 
@@ -139,7 +131,7 @@ export const requestSupervisor = asyncHandler(async (req, res, next) => {
         message,
     };
 
-    const request = await requestService.createRequest(requiredData);
+    const request = await requestService.createRequest(requestData);
     await notificationService.notifyUser(
         teacherId,
         `${student.name} has request ${supervisor.name} to be their supervisor.`,
@@ -155,7 +147,6 @@ export const requestSupervisor = asyncHandler(async (req, res, next) => {
 
     })
 })
-
 
 export const getDashboardStats = asyncHandler(async (req, res, next) => {
     const studentId = req.user._id;
@@ -182,27 +173,35 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
         }
 
     })
-
-
-
 })
 
 export const getFeedback = asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;
     const studentId = req.user._id;
-    const project = await projectService.getProjectById(projectId);
 
-    if (!project || project.student.toString() !== studentId.toString()) {
+    const project = await projectService.getProjectById(projectId);
+    if (!project || project.student._id.toString() !== studentId.toString()) {
         return next(new ErrorHandler("Not authorized to view feedback for this project", 403))
     };
 
-    const sortedFeedback = project.feedback.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const sortedFeedback = project.feedback.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((f) => {
+        return {
+            _id: f._id,
+            title: f.title,
+            message: f.message,
+            type: f.type,
+            createdAt: f.createdAt,
+            supervisorName: f.supervisorId?.name,
+            supervisorEmail: f.supervisorId?.email,
 
+        }
+    })
     res.status(200).json({
         success: true,
         data: { feedback: sortedFeedback },
     })
 });
+
 
 export const downloadFile = asyncHandler(async (req, res, next) => {
     const { projectId, fileId } = req.params;

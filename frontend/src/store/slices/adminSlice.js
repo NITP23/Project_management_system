@@ -106,6 +106,35 @@ export const getAllProjects = createAsyncThunk("getAllProjects", async (_, thunk
   }
 })
 
+
+
+export const getDashboardStats = createAsyncThunk("getDashboardStats", async (_, thunkAPI) => {
+  try {
+    const res = await axiosInstance.get(`/admin/fetch-dashboard-stats`);
+    return res.data.data.stats;
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message || "failed to fetch admin dashboard stats"
+    )
+    return thunkAPI.rejectWithValue(err.response?.data?.message);
+  }
+})
+
+export const assignSupervisor = createAsyncThunk("assignSupervisor",
+  async (DataTransfer, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post("/teacher/assign-supervisor", data);
+      toast.success(res.data.message)
+      return (res.data.data);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "failed to assign supervisor"
+      )
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+)
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -155,6 +184,9 @@ const adminSlice = createSlice({
         if (state.users) {
           state.users = state.users.filter(u => u._id !== action.payload)
         }
+      })
+      .addCase(getDashboardStats.fulfilled, (state, action) => {
+        state.stats = action.payload
       })
 
   },

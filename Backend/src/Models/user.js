@@ -55,7 +55,7 @@ const userSchema = new mongoose.Schema({
         ref: "User",
         default: null,
     },
-    projects: {
+    project: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Project",
         default: null,

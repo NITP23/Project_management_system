@@ -9,14 +9,16 @@ const StudentDashboard = () => {
   const { authUser } = useSelector(state => state.auth)
   const { dashboardStats } = useSelector(state => state.student)
   useEffect(() => {
-    dispatch(fetchDashboardStats(authUser._id))
-  }, [dispatch])
+    if (authUser?._id) {
+      dispatch(fetchDashboardStats(authUser._id))
+    }
+  }, [dispatch, authUser?._id])
 
-  const project = dashboardStats?.project || []
-  const supervisorName = project?.supervisorName || ""
+  const project = dashboardStats?.project || null
+  const supervisorName = dashboardStats?.supervisorName || project?.supervisor?.name || project?.supervisorName || ""
   const upcomingDeadlines = dashboardStats?.upcomingDeadlines || [];
   const topNotifications = dashboardStats?.topNotifications || [];
-  const feedbackList = dashboardStats?.feedbackList?.slice(-2).reverse() || [];
+  const feedbackList = dashboardStats?.feedbackNotifications?.slice(-2).reverse() || [];
 
   const formatDate = (dataStr) => {
     if (!dataStr) return "N/A";
@@ -220,7 +222,7 @@ const StudentDashboard = () => {
                           <p className="text-slate-800 font-medium">{d.title || ""}</p>
                           <p className="text-slate-600 tex-sm">{formatDate(d.deadline)}</p>
                         </div>
-                        <div className={`badge badge-pending`}>upcoming
+                        <div className={`badge badge-pending capitalize font-bold`}>upcoming
                         </div>
                       </div>
                     )

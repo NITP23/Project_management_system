@@ -125,9 +125,35 @@ export const rejectRequest = asyncHandler(async (req, res, next) => {
 
 export const getAssignedStudents = asyncHandler(async (req, res, next) => {
     const teacherId = req.user._id;
-    const students = (await User.find({
+    let students = await User.find({
         supervisor: teacherId,
-    }).populate("project")).sort({ createdAt: -1 })
+    }).populate("project").sort({ createdAt: -1 });
+
+    // Self-heal logic for existing DB records affected by previous bugs
+    students = await Promise.all(students.map(async (student) => {
+        let studentObj = student.toObject();
+        // If student is assigned but their project is missing (because of the strict mode bug)
+        // or the project is missing the 'approved' status, heal it here.
+        if (!studentObj.project || studentObj.project.status === "pending") {
+            const project = await Project.findOne({ student: student._id }).sort({ createdAt: -1 });
+            if (project) {
+                let projectUpdated = false;
+                if (project.status === "pending") {
+                    project.status = "approved";
+                    project.supervisor = teacherId;
+                    await project.save();
+                    projectUpdated = true;
+                }
+
+                if (!student.project) {
+                    await User.findByIdAndUpdate(student._id, { project: project._id });
+                }
+
+                studentObj.project = projectUpdated ? project.toObject() : project;
+            }
+        }
+        return studentObj;
+    }));
 
     const total = await User.countDocuments({ supervisor: teacherId });
 
@@ -151,7 +177,7 @@ export const markComplete = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("Project not found", 404));
     }
 
-    if (project.supervisor.toString() !== teacherId.toString()) {
+    if (project.supervisor?._id.toString() !== teacherId.toString()) {
         return next(new ErrorHandler("You are not authorized to mark this project as complete", 403));
     }
 
@@ -159,7 +185,14 @@ export const markComplete = asyncHandler(async (req, res, next) => {
 
     await notificationServices.notifyUser(project.student._id, `Your project ${project.title} has been marked as completed by ${req.user.name}`, "general", `/students/status`, "low")
 
-
+    const admins = await User.find({ role: "Admin" }).select("_id");
+    await Promise.all(admins.map((admin) => notificationServices.notifyUser(
+        admin._id,
+        `Project ${project.title} by ${updatedProject.student.name} has been marked as completed by supervisor ${req.user.name}`,
+        "general",
+        "/admin/projects",
+        "low"
+    )));
 
     res.status(200).json({
         success: true,
@@ -189,6 +222,7 @@ export const addFeedback = asyncHandler(async (req, res, next) => {
     const { project: updatedProject, latestFeedback } =
         await projectServices.addFeedback(
             projectId,
+            teacherId,
             message,
             title,
             type
@@ -207,4 +241,49 @@ export const addFeedback = asyncHandler(async (req, res, next) => {
         },
     })
 
+})
+
+
+
+export const getFiles = asyncHandler(async (req, res, next) => {
+    const { teacherId } = req.user._id;
+    const projects = await projectServices.getProjectsBySupervisor(teacherId);
+    const allFile = projects.flatMap(project =>
+        project.files.map(file => ({
+            ...file.toObject(),
+            projectId: project._id,
+            projectTitle: project.title,
+            studentName: project.student.name,
+            studentEmail: project.student.email,
+
+        }))
+    )
+
+    res.status(200).json({
+        success: true,
+        message: "Files fetched successfully",
+        data: {
+            files: allFile,
+        }
+    })
+})
+
+
+export const downloadFile = asyncHandler(async (req, res, next) => {
+    const { projectId, fileId } = req.params;
+    const supervisorId = req.user?._id
+    const project = await projectServices.getProjectById(projectId);
+
+    if (!project) {
+        return next(new ErrorHandler("Project not Found", 404));
+    }
+    if (project.supervisor._id.toString() !== supervisorId.toString()) {
+        return next(new ErrorHandler("Not authorized to download file", 403));
+    }
+    const file = project.files.id(fileId);
+    if (!file) {
+        return next(new ErrorHandler("File notFound", 404));
+    }
+
+    fileServices.streamDownload(file.fileUrl, res, file.originalName);
 })

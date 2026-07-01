@@ -34,8 +34,8 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
 
     const existingProject = await projectService.getProjectByStudent(studentId);
 
-    if (existingProject && existingProject.status !== "rejected") {
-        return next(new ErrorHandler("You already have an active project, YOu can only submit new proposal if the previous project is rejected", 400))
+    if (existingProject && existingProject.status !== "rejected" && existingProject.status !== "completed") {
+        return next(new ErrorHandler("You already have an active project, You can only submit a new proposal if the previous project is rejected or completed", 400))
     }
 
     if (existingProject && existingProject.status === "rejected") {
@@ -52,6 +52,16 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
 
     await User.findByIdAndUpdate(studentId, { project: project._id })
 
+    const admins = await User.find({ role: "Admin" }).select("_id");
+    const studentName = req.user?.name || "A student";
+    await Promise.all(admins.map((admin) => notificationService.notifyUser(
+        admin._id,
+        `${studentName} submitted a new project proposal: ${title}`,
+        "general",
+        "/admin/projects",
+        "medium"
+    )));
+
     res.status(201).json({
         success: true,
         data: { project },
@@ -64,7 +74,7 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
     const studentId = req.user._id;
     const project = await projectService.getProjectById(projectId);
 
-    if (!project || project.student._id.toString() !== studentId.toString()) {
+    if (!project || project.student._id.toString() !== studentId.toString() || project.status === "rejected") {
         return next(new ErrorHandler("Not authorized to upload files to this project", 403))
     }
     if (!req.files || req.files.length === 0) {
@@ -153,7 +163,7 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
     const project = await Project.findOne({ student: studentId }).sort({ createdAt: -1 }).populate("supervisor", "name").lean();
 
     const now = new Date();
-    const upcomingDeadlines = await Project.find({ student: studentId, deadline: { $gte: now }, }).select("title description").sort({ deadline: 1 }).limit(3).lean();
+    const upcomingDeadlines = await Project.find({ student: studentId, deadline: { $gte: now }, }).select("title description deadline").sort({ deadline: 1 }).limit(3).lean();
 
     const topNotifications = await Notification.find({ user: studentId }).populate("user", "name").sort({ createdAt: -1 }).limit(3).lean();
 

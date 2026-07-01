@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   const { stats, projects } = useSelector(state => state.admin);
   // const { projects } = useSelector(state => state.project);
 
-  const { notifications } = useSelector(state => state.notification.list);
+  const notifications = useSelector(state => state.notification.list);
   const dispatch = useDispatch();
   const [isReportModelOpen, setIsReportModelOpen] = useState(false);
   const [reportSearch, setReportSearch] = useState('');

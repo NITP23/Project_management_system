@@ -7,14 +7,11 @@ import * as notificationServices from "../services/notificationServices.js"
 
 export const getNotifications = asyncHandler(async (req, res, next) => {
     const userId = req.user?._id;
-    const role = req.user?.role;
-    let query = {};
+    const role = req.user?.role?.toLowerCase();
+    let query = { user: userId };
 
     if (role === "admin") {
-        query.type = { $in: ["request"] };
-    }
-    else {
-        query.user = userId;
+        query = { $or: [{ user: userId }, { type: { $in: ["request"] } }] };
     }
 
 

@@ -31,11 +31,14 @@ import ManageTeachers from "./pages/admin/ManageTeachers";
 import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
+
+import NotFound from "./pages/NotFound";
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { Loader } from "lucide-react";
 import { getUser } from "./store/slices/authSlice";
 import { getAllProjects, getAllUsers } from "./store/slices/adminSlice";
+import { fetchDashboardStats } from "./store/slices/studentSlice";
 
 const App = () => {
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
@@ -49,6 +52,9 @@ const App = () => {
     if (authUser?.role === "Admin") {
       dispatch(getAllUsers());
       dispatch(getAllProjects());
+    }
+    if(authUser?.role === "Student"){
+      dispatch(fetchDashboardStats());
     }
   }, [authUser]);
 
@@ -74,8 +80,22 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        
+         {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/login" replace/>} />
+        <Route path="/unauthorized" element={
+          <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-slate-800 mb-4">Unauthorized Access</h1>
+              <p className="text-slate-600 mb-4">You don't have permission to to access this page</p>
+              <button className="btn-secondary" onClick={() => window.history.back()}>Go back </button>
+            </div>
+          </div>
+        } />
+
+        <Route path="*" element={<NotFound />} />
+
         {/* auth routes*/}
-        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -119,7 +139,9 @@ const App = () => {
           <Route path="files" element={<TeacherFiles />} />
         </Route>
 
+       
 
+        
       </Routes>
       <ToastContainer theme="dark" />
     </BrowserRouter>

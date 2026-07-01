@@ -123,7 +123,7 @@ export const getDashboardStats = createAsyncThunk("getDashboardStats", async (_,
 export const assignSupervisor = createAsyncThunk("assignSupervisor",
   async (DataTransfer, thunkAPI) => {
     try {
-      const res = await axiosInstance.post("/teacher/assign-supervisor", data);
+      const res = await axiosInstance.post("/admin/assign-supervisor", DataTransfer);
       toast.success(res.data.message)
       return (res.data.data);
     } catch (err) {
@@ -134,6 +134,56 @@ export const assignSupervisor = createAsyncThunk("assignSupervisor",
     }
   }
 )
+
+
+export const approveProject = createAsyncThunk("approveProject",
+  async (id, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/admin/project/${id}`, {status: 'approved'});
+      toast.success(res.data.message || "Project approved successfully")
+      return id;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "failed to approve project"
+      )
+      return thunkAPI.rejectWithValue(err.response.data.message);
+    }
+  }
+)
+
+
+export const rejectProject = createAsyncThunk("rejectProject",
+  async (id, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/admin/project/${id}`, {status: 'rejected'});
+      toast.success(res.data.message || "Project rejected")
+      return id;
+    } catch (error) {
+      toast.error(
+        error.response.data.message || "failed to reject project"
+      )
+      return thunkAPI.rejectWithValue(error.response.data.message);
+    }
+  }
+)
+
+
+export const getProject = createAsyncThunk("getProject",
+  async (id, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`/admin/project/${id}`);
+      // toast.success(res.data.message || "Project approved successfully")
+      return (res.data?.data?.project) || res.data?.data || res.data;
+    } catch (error) {
+      toast.error(
+        error.response.data.message || "failed to fetch project"
+      )
+      return thunkAPI.rejectWithValue(error.response.data.message);
+    }
+  }
+)
+
+
 
 const adminSlice = createSlice({
   name: "admin",
@@ -187,6 +237,15 @@ const adminSlice = createSlice({
       })
       .addCase(getDashboardStats.fulfilled, (state, action) => {
         state.stats = action.payload
+      })
+
+      .addCase(approveProject.fulfilled, (state,action) => {
+        const projectId = action.payload;
+        state.projects = state.projects.map(p => p._id === projectId ? {...p, status: "approved"}: p) 
+      })
+      .addCase(rejectProject.fulfilled, (state,action) => {
+        const projectId = action.payload;
+        state.projects = state.projects.map(p => p._id === projectId ? {...p, status: "rejected"}: p) 
       })
 
   },

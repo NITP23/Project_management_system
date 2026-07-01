@@ -165,7 +165,7 @@ export const assignSupervisor = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("Please provide student and supervisor IDs", 400));
     }
 
-    const project = await Project.findOne({ student: studentId });
+    const project = await projectServices.getProjectByStudent(studentId);
 
     if (!project) {
         return next(new ErrorHandler("Project not found", 400))
@@ -205,10 +205,93 @@ export const assignSupervisor = asyncHandler(async (req, res, next) => {
         "low"
     )
 
+    // const admins = await User.find({ role: "Admin" }).select("_id");
+    // await Promise.all(admins.map((admin) => notificationServices.notifyUser(
+    //     admin._id,
+    //     `Supervisor assigned to ${student.name} for project ${project.title}`,
+    //     "approval",
+    //     "/admin/assign-supervisor",
+    //     "medium"
+    // )));
+
     res.status(200).json({
         success: true,
         message: "Supervisor assigned successfully",
         data: { student, supervisor }
+    })
+
+})
+
+export const getProject = asyncHandler(async (req,res,next) => {
+    const {id} = req.params;
+    const project = await projectServices.getProjectById(id);
+
+     if (!project) {
+        return next(new ErrorHandler("Project not found", 400))
+    }
+
+    const user = req.user;
+    const userRole = (user.role || "").toLowerCase();
+    const userId = user._id?.toString() || user.id
+
+    const hasAccess = userRole === "admin" || project.student._id.toString() === userId || (project.supervisor && project.supervisor._id.toString() === userId)
+
+    if (!hasAccess) {
+        return next(new ErrorHandler("not authorized to fetch project", 403))
+    }
+
+    return res.status(200).json({
+        success: true,
+        data: {project},
+    })
+
+})
+
+export const upadateProjectStatus = asyncHandler(async(req,res,next) => {
+    const {id} = req.params;
+    const updatedData = req.body;
+    const project = await projectServices.getProjectById(id);
+
+     if (!project) {
+        return next(new ErrorHandler("Project not found", 400))
+    }
+
+    const user = req.user;
+    const userRole = (user.role || "").toLowerCase();
+    const userId = user._id?.toString() || user.id
+
+    const hasAccess = userRole === "admin" || project.student._id.toString() === userId || (project.supervisor && project.supervisor._id.toString() === userId)
+
+    if (!hasAccess) {
+        return next(new ErrorHandler("not authorized to update project status", 403))
+    }
+
+    const updatedProject = await projectServices.updateProject(id,updatedData);
+
+    const studentId = project.student?._id || project.student;
+    if (studentId) {
+        await notificationServices.notifyUser(
+            studentId,
+            `Your project status was updated to ${updatedData.status || "updated"}`,
+            updatedData.status === "approved" ? "approval" : updatedData.status === "rejected" ? "rejection" : "general",
+            "/student",
+            "medium"
+        );
+    }
+
+    const admins = await User.find({ role: "Admin" }).select("_id");
+    await Promise.all(admins.map((admin) => notificationServices.notifyUser(
+        admin._id,
+        `Project status updated to ${updatedData.status || "updated"} for ${project.title}`,
+        updatedData.status === "approved" ? "approval" : updatedData.status === "rejected" ? "rejection" : "general",
+        "/admin/projects",
+        "medium"
+    )));
+
+    return res.status(200).json({
+        success: true,
+        message:"project status updated",
+        data: {project: updatedData},
     })
 
 })

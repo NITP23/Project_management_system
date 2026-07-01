@@ -76,7 +76,7 @@ export const uploadFiles = createAsyncThunk("student/uploadFiles", async ({ proj
     })
 
     toast.success(res.data.message || "Files uploaded successfully");
-    return res.data.project || res.data;
+    return res.data.data?.project || res.data.data || res.data;
   } catch (err) {
     toast.error(err.response.data.message || "Failed to upload files");
 

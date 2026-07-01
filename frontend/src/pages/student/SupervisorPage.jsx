@@ -217,15 +217,16 @@ const SupervisorPage = () => {
                   <div key={sup._id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow ">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="w-12 h-12 bg-slate-300 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-slate-600">{(sup.name || "Anonymous")}</span>
+                        <span className="text-sm font-bold text-slate-600">{(sup.name || "Anonymous").split(" ")
+                          .map(word => word[0])
+                          .join("")
+                          .toUpperCase()}</span>
                       </div>
 
                       <div className="flex-1">
                         <h4 className="font-medium text-slate-800">{sup.name}</h4>
                         <p className="text-sm text-slate-600">{sup.department}</p>
                       </div>
-
-
                     </div>
 
 

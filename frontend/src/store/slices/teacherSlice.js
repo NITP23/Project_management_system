@@ -63,6 +63,33 @@ export const markComplete = createAsyncThunk("markComplete", async (projectId, t
   }
 })
 
+export const downloadTeacherFile = createAsyncThunk("downloadTeacherFile", async ({ projectId, fileId }, thunkAPI) => {
+  try {
+    const res = await axiosInstance.get(`/teacher/download/${projectId}/${fileId}`,
+      {
+        responseType: "blob",
+
+      }
+    )
+    return { blob: res.data, projectId, fileId }
+  }
+  catch (err) {
+    toast.error(err.response?.data?.message || "failed to download file");
+    return thunkAPI.rejectWithValue(err.response?.data?.message)
+  }
+})
+
+
+export const getFiles = createAsyncThunk("getTeacherFiles", async (_, thunkAPI) => {
+  try {
+    const res = await axiosInstance.get(`/teacher/files`);
+    return res.data?.data?.files || res.data;
+  }
+  catch (err) {
+    toast.error(err.response?.data?.message || "failed to fetch teacher files");
+    return thunkAPI.rejectWithValue(err.response?.data?.message)
+  }
+})
 
 
 export const addFeedback = createAsyncThunk("addFeedback", async ({ projectId, payload }, thunkAPI) => {
@@ -140,10 +167,15 @@ const teacherSlice = createSlice({
     builder.addCase(getTeacherDashboardStats.pending, (state, action) => {
       state.loading = true;
     })
+
     builder.addCase(getTeacherDashboardStats.fulfilled, (state, action) => {
       state.loading = false;
       state.dashboardStats = action.payload;
     })
+    builder.addCase(getFiles.fulfilled, (state, action) => {
+      state.files = action.payload?.files || action.payload || [];
+    })
+
     builder.addCase(getTeacherRequests.fulfilled, (state, action) => {
       state.list = action.payload?.requests || action.payload;
     })

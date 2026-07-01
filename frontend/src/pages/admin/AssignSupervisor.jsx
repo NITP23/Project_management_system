@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { getAllUsers } from "../../store/slices/adminSlice";
+import { getAllUsers, assignSupervisor } from "../../store/slices/adminSlice";
 import { prepareAutoBatched } from "@reduxjs/toolkit";
 import { AlertTriangle, CheckCircle, Users } from "lucide-react";
 
@@ -67,7 +67,7 @@ const AssignSupervisor = () => {
     }))
   }
   const handleAssign = async (studentId, projectStatus, projectId) => {
-    const supervisorId = selectedSupervisor(projectId);
+    const supervisorId = selectedSupervisor[projectId];
 
     if (!studentId || !supervisorId) {
       toast.error("please select a supervisor first");
@@ -80,11 +80,11 @@ const AssignSupervisor = () => {
 
     setPendingFor(projectId);
     const res = await dispatch(
-      assignedSupervisorThunk({ studentId, supervisorId })
+      assignSupervisor({ studentId, supervisorId })
     );
     setPendingFor(null);
-    if (assignedSupervisorThunk.fulfilled.match(res)) {
-      toast.success("Supervisor assigned successfully");
+    if (assignSupervisor.fulfilled.match(res)) {
+      // toast.success("Supervisor assigned successfully");
       setSelectedSupervisor(prev => {
         const newState = { ...prev };
         delete newState[projectId];

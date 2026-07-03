@@ -1,7 +1,7 @@
-import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { asyncHandler } from "../middleWares/asyncHandler.js";
 import ErrorHandler from "../middleWares/error.js";
-import { Deadline } from "../models/deadline.js";
-import { Project } from "../models/project.js"
+import { Deadline } from "../Models/deadline.js";
+import { Project } from "../Models/project.js"
 import { createProject, getProjectById } from "../services/projectServices.js"
 
 

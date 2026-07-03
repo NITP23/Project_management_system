@@ -23,9 +23,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "https://fyp-ms.netlify.app",
+    "http://localhost:5173"
+].map(origin => origin ? origin.replace(/\/$/, "") : "").filter(Boolean);
+
 app.use(
     cors({
-        origin: [process.env.FRONTEND_URL],
+        origin: allowedOrigins,
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     })

@@ -28,9 +28,9 @@ export const addFilesToProject = async (projectId, files) => {
         throw new ErrorHandler("Project not found", 404);
     }
     const filMetaData = files.map((file) => ({
-        fileType: file.mimetype,
-        fileUrl: file.path,
-        originalName: file.originalname,
+        fileType: file.fileType,
+        fileUrl: file.secure_url || file.fileUrl,
+        originalName: file.originalName || file.originalname,
         uploadedAt: new Date()
     }))
 
@@ -74,17 +74,17 @@ export const addFeedback = async (projectId, supervisorId, message, title, type)
 
 export const getProjectsBySupervisor = async (supervisorId) => {
     return await getAllProjects({ supervisor: supervisorId });
-} 
+}
 
-export const updateProject = async(id, updatedData) => {
-    const project = await Project.findByIdAndUpdate(id,updatedData,{
-        new:true,
+export const updateProject = async (id, updatedData) => {
+    const project = await Project.findByIdAndUpdate(id, updatedData, {
+        new: true,
         runValidators: true,
     })
-    .populate("student", "name email")
-    .populate("supervisor", "name email");
-    
-    if(!project){
+        .populate("student", "name email")
+        .populate("supervisor", "name email");
+
+    if (!project) {
         throw new ErrorHandler("Project not Found", 404)
     }
     return project;

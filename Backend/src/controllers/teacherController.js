@@ -63,7 +63,7 @@ export const getRequests = asyncHandler(async (req, res, next) => {
         return requestObj;
     }))
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Requests fetched successfully",
         data: { requests: updatedRequests, total },
@@ -90,7 +90,7 @@ export const acceptRequest = asyncHandler(async (req, res, next) => {
 
     await sendEmail({ to: studentEmail, subject: "✅ Your Supervisor Request has been Accepted", message });
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Request accepted successfully",
         data: { request },
@@ -115,7 +115,7 @@ export const rejectRequest = asyncHandler(async (req, res, next) => {
 
     await sendEmail({ to: studentEmail, subject: "❌ Your Supervisor Request has been Rejected", message });
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Request rejected",
         data: { request },
@@ -194,7 +194,7 @@ export const markComplete = asyncHandler(async (req, res, next) => {
         "low"
     )));
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Project marked as completed",
         data: {
@@ -232,7 +232,7 @@ export const addFeedback = asyncHandler(async (req, res, next) => {
 
 
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Feedback posted successfully",
         data: {
@@ -285,5 +285,9 @@ export const downloadFile = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("File notFound", 404));
     }
 
-    fileServices.streamDownload(file.fileUrl, res, file.originalName);
+    return res.status(200).json({
+        success: true,
+        fileUrl: file.fileUrl,
+        originalName: file.originalName,
+    })
 })

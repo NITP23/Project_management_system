@@ -58,7 +58,7 @@ export const markAsRead = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler(`Notification not found with id of ${id}`, 404))
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Notification mark as read",
         data: { notification },
@@ -69,7 +69,7 @@ export const markAsRead = asyncHandler(async (req, res, next) => {
 export const markAllAsRead = asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     await notificationServices.markAllAsRead(userId);
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "All notifications marked as read",
     })
@@ -85,7 +85,7 @@ export const deleteNotification = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler(`Notification not found with id of ${id}`, 404))
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Notification deleted",
 

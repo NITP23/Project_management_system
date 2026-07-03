@@ -17,6 +17,7 @@ import { getAllProjects, getDashboardStats } from "../../store/slices/adminSlice
 import { getNotifications } from "../../store/slices/notificationSlice";
 import { downloadProjectFile } from "../../store/slices/projectSlice";
 import { AlertCircle, AlertTriangle, Box, FileTextIcon, Folder, PlusIcon, User, X, } from "lucide-react"
+import { downloadFile } from "../../store/slices/studentSlice";
 
 const AdminDashboard = () => {
 
@@ -56,20 +57,20 @@ const AdminDashboard = () => {
 
 
   const handleDownload = async (projectId, fileId, name) => {
+
     try {
-      const res = await dispatch(downloadProjectFile({ projectId, fileId })).unwrap();
-      const { blob } = res;
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", name || "download");
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("File download failed:", error);
+      const res = await dispatch(
+        downloadProjectFile({ projectId, fileId })
+      ).unwrap()
+      const fileUrl = res.fileUrl;
+      window.open(fileUrl, "_blank");
+      toast.success("File downloaded successfully");
     }
+    catch (error) {
+      console.error("Error downloading file", error);
+      toast.error("Failed to download file please try again");
+    }
+
   }
 
 

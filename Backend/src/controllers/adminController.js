@@ -21,7 +21,7 @@ export const createStudent = asyncHandler(async (req, res, next) => {
         role: "Student",
         department
     });
-    res.status(201).json({
+    return res.status(201).json({
         success: true,
         message: "Student created successfully",
         data: { user },
@@ -54,7 +54,7 @@ export const deleteStudent = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("User is not a student", 400));
     }
     await userServices.deleteUser(id);
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Student deleted successfully",
     });
@@ -76,7 +76,7 @@ export const createTeacher = asyncHandler(async (req, res, next) => {
         experties: Array.isArray(experties) ? experties : typeof experties === "string" && experties.trim() !== "" ? experties.split(",").map(s => s.trim()) : [],
         role: "Teacher"
     });
-    res.status(201).json({
+    return res.status(201).json({
         success: true,
         message: "Teacher created successfully",
         data: { user },
@@ -92,7 +92,7 @@ export const updateTeacher = asyncHandler(async (req, res, next) => {
     if (!user) {
         return next(new ErrorHandler("Teacher not found", 404));
     }
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Teacher updated successfully",
         data: { user },
@@ -109,7 +109,7 @@ export const deleteTeacher = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("User is not a Teacher", 400));
     }
     await userServices.deleteUser(id);
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Teacher deleted successfully",
     });
@@ -118,7 +118,7 @@ export const deleteTeacher = asyncHandler(async (req, res, next) => {
 export const getAllUsers = asyncHandler(async (req, res, next) => {
     const users = await userServices.getAllUsers()
     // console.log(users)
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "users fetched sucessfully",
         data: { users }
@@ -214,7 +214,7 @@ export const assignSupervisor = asyncHandler(async (req, res, next) => {
     //     "medium"
     // )));
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Supervisor assigned successfully",
         data: { student, supervisor }
@@ -222,11 +222,11 @@ export const assignSupervisor = asyncHandler(async (req, res, next) => {
 
 })
 
-export const getProject = asyncHandler(async (req,res,next) => {
-    const {id} = req.params;
+export const getProject = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
     const project = await projectServices.getProjectById(id);
 
-     if (!project) {
+    if (!project) {
         return next(new ErrorHandler("Project not found", 400))
     }
 
@@ -242,17 +242,17 @@ export const getProject = asyncHandler(async (req,res,next) => {
 
     return res.status(200).json({
         success: true,
-        data: {project},
+        data: { project },
     })
 
 })
 
-export const upadateProjectStatus = asyncHandler(async(req,res,next) => {
-    const {id} = req.params;
+export const upadateProjectStatus = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
     const updatedData = req.body;
     const project = await projectServices.getProjectById(id);
 
-     if (!project) {
+    if (!project) {
         return next(new ErrorHandler("Project not found", 400))
     }
 
@@ -266,7 +266,7 @@ export const upadateProjectStatus = asyncHandler(async(req,res,next) => {
         return next(new ErrorHandler("not authorized to update project status", 403))
     }
 
-    const updatedProject = await projectServices.updateProject(id,updatedData);
+    const updatedProject = await projectServices.updateProject(id, updatedData);
 
     const studentId = project.student?._id || project.student;
     if (studentId) {
@@ -290,8 +290,8 @@ export const upadateProjectStatus = asyncHandler(async(req,res,next) => {
 
     return res.status(200).json({
         success: true,
-        message:"project status updated",
-        data: {project: updatedData},
+        message: "project status updated",
+        data: { project: updatedData },
     })
 
 })

@@ -1,9 +1,9 @@
 import { asyncHandler } from "../middleWares/asyncHandler.js";
 import ErrorHandler from "../middleWares/error.js";
-import {User} from "../Models/user.js";
+import { User } from "../Models/user.js";
 import { generateToken } from "../utils/generateToken.js";
-import {generateForgetPasswordEmailTemplate} from "../utils/emailTemplates.js";
-import {sendEmail} from "../services/emailService.js";
+import { generateForgetPasswordEmailTemplate } from "../utils/emailTemplates.js";
+import { sendEmail } from "../services/emailService.js";
 import crypto from "crypto";
 
 // REGISTER USER
@@ -17,14 +17,14 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     if (user) {
         return next(new ErrorHandler("User already exists", 400));
     }
-    user = new User({email, name, password, role});
+    user = new User({ email, name, password, role });
     await user.save();
     generateToken(user, 201, "User registered successfully", res);
 
 });
 
 export const login = asyncHandler(async (req, res, next) => {
-    const { email, password , role } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
         return next(new ErrorHandler("Please fill all the required fields", 400));
@@ -42,14 +42,14 @@ export const login = asyncHandler(async (req, res, next) => {
 
 export const getUser = asyncHandler(async (req, res, next) => {
     const user = req.user;
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         user,
-    }); 
+    });
 });
 
 export const logout = asyncHandler(async (req, res, next) => {
-    res.status(200).cookie("token", "", {
+    return res.status(200).cookie("token", "", {
         expires: new Date(Date.now()), // 7 days
         httpOnly: true,
     }).json({
@@ -59,7 +59,7 @@ export const logout = asyncHandler(async (req, res, next) => {
 });
 
 export const forgotPassword = asyncHandler(async (req, res, next) => {
-    const user = await User.findOne({email : req.body.email});
+    const user = await User.findOne({ email: req.body.email });
     if (!user) {
         return next(new ErrorHandler("User not found with this user", 404));
     }
@@ -87,7 +87,7 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
 });
 
 export const resetPassword = asyncHandler(async (req, res, next) => {
-    const {token} = req.params;
+    const { token } = req.params;
     const resetPasswordToken = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
         resetPasswordToken,
@@ -96,10 +96,10 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     if (!user) {
         return next(new ErrorHandler("Invalid or expired password reset token", 400));
     }
-    if(!req.body.password || !req.body.confirmPassword){
+    if (!req.body.password || !req.body.confirmPassword) {
         return next(new ErrorHandler("Please provide a new password", 400));
     }
-    if(req.body.password !== req.body.confirmPassword){
+    if (req.body.password !== req.body.confirmPassword) {
         return next(new ErrorHandler("Password and confirm password do not match", 400));
     }
     user.password = req.body.password;
@@ -107,6 +107,6 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     user.resetPasswordExpire = undefined;
     await user.save();
     generateToken(user, 200, "Password reset successful", res);
-    
+
 });
 

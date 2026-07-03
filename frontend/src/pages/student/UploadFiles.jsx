@@ -28,12 +28,6 @@ const UploadFiles = () => {
 
   const handleUpload = (e) => {
     let activeProject = project;
-    // if(!activeProject){
-    //   const action = dispatch(fetchProject());
-    //   if(fetchProject.fulfilled.match(action)){
-    //     activeProject = action.payload?.project || action.payload;
-    //   }
-    // }
 
     if (selectedFiles.length === 0) {
       return;
@@ -57,19 +51,20 @@ const UploadFiles = () => {
   }
 
   const handleDownloadFile = async (file) => {
-    const res = await dispatch(
-      downloadFile({ projectId: project._id, fileId: file._id })
-    ).then((res) => {
-      const { blob } = res.payload;
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", file.name || "download");
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    })
+
+    try {
+      const res = await dispatch(
+        downloadFile({ projectId: project._id, fileId: file._id })
+      ).unwrap()
+      const fileUrl = res.fileUrl || file.fileUrl;
+      window.open(fileUrl, "_blank");
+      toast.success("File downloaded successfully");
+    }
+    catch (error) {
+      console.error("Error downloading file", error);
+      toast.error("Failed to download file please try again");
+    }
+
   }
 
   return <>

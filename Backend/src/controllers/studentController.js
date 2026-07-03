@@ -8,6 +8,7 @@ import * as notificationService from "../services/notificationServices.js"
 import { Project } from "../Models/project.js";
 import { Notification } from "../Models/notification.js";
 import * as fileServices from "../services/fileServices.js"
+import cloudinary from "../db/cloudinary.js";
 
 export const getStudentProject = asyncHandler(async (req, res, next) => {
     const studentId = req.user._id;
@@ -21,7 +22,7 @@ export const getStudentProject = asyncHandler(async (req, res, next) => {
             message: "No project found for the student",
         })
     }
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         data: { project },
     })
@@ -62,7 +63,7 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
         "medium"
     )));
 
-    res.status(201).json({
+    return res.status(201).json({
         success: true,
         data: { project },
         message: "Project proposal submitted successfully",
@@ -80,9 +81,19 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
     if (!req.files || req.files.length === 0) {
         return next(new ErrorHandler("No files Uploaded", 400))
     }
-    const updatedProject = await projectService.addFilesToProject(projectId, req.files);
 
-    res.status(200).json({
+
+    const uploadedFiles = [];
+    for (let file of req.files) {
+        uploadedFiles.push({
+            fileType: file.mimetype,
+            fileUrl: file.path,
+            originalName: file.originalname
+        })
+    }
+    const updatedProject = await projectService.addFilesToProject(projectId, uploadedFiles);
+
+    return res.status(200).json({
         success: true,
         message: "file uploaded successfully",
         data: { project: updatedProject },
@@ -93,7 +104,7 @@ export const getAvailableSupervisors = asyncHandler(async (req, res, next) => {
     const supervisors = await User.find({ role: "Teacher" }).select(" name email department experties").lean()
 
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         data: { supervisors },
         message: "Available supervisors fetched successfully",
@@ -112,7 +123,7 @@ export const getSupervisor = asyncHandler(async (req, res, next) => {
         });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         data: { supervisor: student.supervisor },
     });
@@ -150,7 +161,7 @@ export const requestSupervisor = asyncHandler(async (req, res, next) => {
         "medium"
     )
 
-    res.status(201).json({
+    return res.status(201).json({
         success: true,
         data: { request },
         message: "Supervisor request submitted successfully",
@@ -171,7 +182,7 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
 
     const supervisorName = project?.supervisor?.name || null;
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Dashboard fetched successfully....",
         data: {
@@ -206,7 +217,7 @@ export const getFeedback = asyncHandler(async (req, res, next) => {
 
         }
     })
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         data: { feedback: sortedFeedback },
     })
@@ -229,6 +240,10 @@ export const downloadFile = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("File notFound", 404));
     }
 
-    fileServices.streamDownload(file.fileUrl, res, file.originalName);
+    return res.status(200).json({
+        success: true,
+        fileUrl: file.fileUrl,
+        originalName: file.originalName,
+    })
 })
 

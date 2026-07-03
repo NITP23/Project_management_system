@@ -7,8 +7,8 @@ export const downloadProjectFile = createAsyncThunk(
   "downloadProjectFile",
   async ({ projectId, fileId }, thunkAPI) => {
     try {
-      const res = await axiosInstance.get(`/project/${projectId}/files/${fileId}/download`, { responseType: "blob" });
-      return { blob: res.data, projectId, fileId }
+      const res = await axiosInstance.get(`/project/${projectId}/files/${fileId}/download`);
+      return res.data
     }
     catch (error) {
       toast.error(error.response.data.message || "File download failed!");

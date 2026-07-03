@@ -2,20 +2,6 @@ import * as projectServices from "../services/projectServices.js"
 import * as fileServices from "../services/fileServices.js"
 import { asyncHandler } from "../middleWares/asyncHandler.js"
 import ErrorHandler from "../middleWares/error.js"
-// import { Project } from "../Models/project.js"
-// import { SupervisorRequest } from "../Models/supervisorRequest.js"
-
-
-
-// export const getAllProjects = asyncHandler(async (requestAnimationFrame, resizeBy, next) => {
-//     const { projects, total } = await projectServices.getAllProjects();
-
-//     return resizeBy.status(200).json({
-//         success: true,
-//         data: { projects }
-//     })
-// })
-
 
 export const downloadFile = asyncHandler(async (req, res, next) => {
     const { projectId, fileId } = req.params;
@@ -42,8 +28,13 @@ export const downloadFile = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler("file not found", 404))
     }
 
+    return res.status(200).json({
+        success: true,
+        fileUrl: file.fileUrl,
+        originalName: file.originalName,
+    })
 
-    fileServices.streamDownload(file.fileUrl, res, file.originalName)
+    // fileServices.streamDownload(file.fileUrl, res, file.originalName)
 
 })
 

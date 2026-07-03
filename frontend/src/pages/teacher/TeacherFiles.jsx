@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowDownToLine, File, FileArchive, FileSpreadsheet, FileText, Layout, LayoutGrid, List } from "lucide-react";
 import { downloadTeacherFile, getFiles } from "../../store/slices/teacherSlice";
+import { toast } from "react-toastify";
 
 const TeacherFiles = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -105,19 +106,19 @@ const TeacherFiles = () => {
 
 
   const handleDownloadFile = async (file) => {
-    const res = await dispatch(
-      downloadTeacherFile({ projectId: file.projectId, fileId: file.id })
-    ).then((res) => {
-      const { blob } = res.payload;
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", file.name || "download");
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    })
+
+    try {
+      const res = await dispatch(
+        downloadTeacherFile({ projectId: file.projectId, fileId: file.id })
+      ).unwrap()
+      const fileUrl = res.fileUrl || file.fileUrl;
+      window.open(fileUrl, "_blank");
+      toast.success("File downloaded successfully");
+    }
+    catch (error) {
+      console.error("Error downloading file", error);
+      toast.error("Failed to download file please try again");
+    }
 
   }
 
